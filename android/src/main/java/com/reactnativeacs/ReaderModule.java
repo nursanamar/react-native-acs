@@ -1,6 +1,5 @@
 package com.reactnativeacs;
 
-
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -24,7 +23,6 @@ import com.facebook.react.bridge.Arguments;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
-
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.Reader.OnStateChangeListener;
 
@@ -41,14 +39,14 @@ public class ReaderModule extends ReactContextBaseJavaModule {
   private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
   public static final String ACTION_USB_PERMISSION = "com.reactnativeacs.USB_PERMISSION";
   private static final String[] stateStrings = { "Unknown", "Absent",
-    "Present", "Swallowed", "Powered", "Negotiable", "Specific" };
+      "Present", "Swallowed", "Powered", "Negotiable", "Specific" };
 
   private ReactApplicationContext reactContext;
   private Reader mReader;
   private UsbDevice device;
   private Promise InitPromise;
 
-  public  ReaderModule(ReactApplicationContext reactContext){
+  public ReaderModule(ReactApplicationContext reactContext) {
     super(reactContext);
     this.reactContext = reactContext;
   }
@@ -60,50 +58,63 @@ public class ReaderModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void Init(Promise promise){
-    UsbManager manager = (UsbManager) this.reactContext.getSystemService(reactContext.USB_SERVICE);
+  public void Init(Promise promise) {
+    UsbManager manager = (UsbManager) this.reactContext.getSystemService(Context.USB_SERVICE);
     this.mReader = new Reader(manager);
     this.mReader.setOnStateChangeListener(this.stateListener);
     this.InitPromise = promise;
 
     try {
-      for(UsbDevice device: manager.getDeviceList().values()){
-        if (mReader.isSupported(device)){
+      for (UsbDevice device : manager.getDeviceList().values()) {
+        if (mReader.isSupported(device)) {
           this.device = device;
           break;
         }
       }
 
-      if (this.device == null){
-        this.rejectConnectionPromise("E100","No Device found");
-      }else{
-        PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(this.reactContext, 0, new Intent(ACTION_USB_PERMISSION), 0);
+      if (this.device == null) {
+        this.rejectConnectionPromise("E100", "No Device found");
+      } else {
+        // PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
+        // this.reactContext, 0, new Intent(ACTION_USB_PERMISSION),
+        // PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
+            this.reactContext,
+            0,
+            new Intent(ACTION_USB_PERMISSION),
+            PendingIntent.FLAG_MUTABLE // Change from FLAG_IMMUTABLE to FLAG_MUTABLE
+        );
+
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         this.reactContext.registerReceiver(usbReceiver, filter);
+
+        // Log before requesting permission
+        Log.d(TAG, "Requesting USB permission...");
+
         manager.requestPermission(this.device, usbPermissionIntent);
       }
-    }catch (NullPointerException np){
-      this.rejectConnectionPromise("E100","No Device found");
+    } catch (NullPointerException np) {
+      this.rejectConnectionPromise("E100", "No Device found");
     }
   }
 
   @ReactMethod
-  public void ConnectToCard(int slotNum,Promise promise){
+  public void ConnectToCard(int slotNum, Promise promise) {
     int action = Reader.CARD_WARM_RESET;
 
-    try{
+    try {
 
-      byte[] atr = this.mReader.power(slotNum,action);
+      byte[] atr = this.mReader.power(slotNum, action);
       this.mReader.setProtocol(slotNum, Reader.PROTOCOL_T0 | Reader.PROTOCOL_T1);
 
       promise.resolve(this.bytesToHexString(atr));
-    }catch (Exception e){
-      promise.reject("R002",e.getMessage());
+    } catch (Exception e) {
+      promise.reject("R002", e.getMessage());
     }
   }
 
   @ReactMethod
-  public void Transmit(int slotNum,String command,Promise promise){
+  public void Transmit(int slotNum, String command, Promise promise) {
     try {
       byte[] commandByte = hexStringToBytes(command);
       byte[] responseBuffer = new byte[300];
@@ -111,30 +122,31 @@ public class ReaderModule extends ReactContextBaseJavaModule {
 
       Log.i(TAG, command);
 
-      responseLength = this.mReader.transmit(slotNum,commandByte,commandByte.length,responseBuffer,responseBuffer.length);
-      promise.resolve(bytesToHexString(Arrays.copyOfRange(responseBuffer,0,responseLength)));
+      responseLength = this.mReader.transmit(slotNum, commandByte, commandByte.length, responseBuffer,
+          responseBuffer.length);
+      promise.resolve(bytesToHexString(Arrays.copyOfRange(responseBuffer, 0, responseLength)));
 
-    }catch (Exception e){
-      promise.reject("R002",e.getMessage());
+    } catch (Exception e) {
+      promise.reject("R002", e.getMessage());
     }
   }
 
   @ReactMethod
-  public void GetReaderInfo(Promise promise){
-    if(this.mReader.isOpened()){
+  public void GetReaderInfo(Promise promise) {
+    if (this.mReader.isOpened()) {
       WritableMap info = Arguments.createMap();
-      info.putString("readerName",this.mReader.getReaderName());
-      info.putInt("slotNum",this.mReader.getNumSlots());
+      info.putString("readerName", this.mReader.getReaderName());
+      info.putInt("slotNum", this.mReader.getNumSlots());
 
       promise.resolve(info);
-    }else{
-      promise.reject("E004","No reader is opened");
+    } else {
+      promise.reject("E004", "No reader is opened");
     }
   }
 
   @ReactMethod
-  public void CloseReader(){
-    if(this.mReader.isOpened()){
+  public void CloseReader() {
+    if (this.mReader.isOpened()) {
       this.mReader.close();
     }
   }
@@ -151,31 +163,31 @@ public class ReaderModule extends ReactContextBaseJavaModule {
       }
 
       WritableMap eventParams = Arguments.createMap();
-      eventParams.putString("currState",stateStrings[currState]);
-      eventParams.putString("prevState",stateStrings[prevState]);
-      eventParams.putInt("slotNum",slotNum);
+      eventParams.putString("currState", stateStrings[currState]);
+      eventParams.putString("prevState", stateStrings[prevState]);
+      eventParams.putInt("slotNum", slotNum);
 
-      sendEvent("onStateChange",eventParams);
+      sendEvent("onStateChange", eventParams);
     }
   };
 
-  private void sendEvent(String eventName,@Nullable WritableMap params){
+  private void sendEvent(String eventName, @Nullable WritableMap params) {
     this.reactContext
-      .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-      .emit(eventName,params);
+        .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+        .emit(eventName, params);
   }
 
-  private void rejectConnectionPromise(String code,String message){
-    this.InitPromise.reject(code,message);
+  private void rejectConnectionPromise(String code, String message) {
+    this.InitPromise.reject(code, message);
   }
 
-  private void setDevice(UsbDevice device){
+  private void setDevice(UsbDevice device) {
     try {
       this.mReader.open(device);
 
       this.InitPromise.resolve(null);
-    }catch (Exception e){
-      rejectConnectionPromise("R001",e.getMessage());
+    } catch (Exception e) {
+      rejectConnectionPromise("R001", e.getMessage());
     }
   }
 
@@ -188,19 +200,28 @@ public class ReaderModule extends ReactContextBaseJavaModule {
 
           if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
             if (device != null) {
-              synchronized (this){
-                if (mReader.isSupported(device)){
+              synchronized (this) {
+                if (mReader.isSupported(device)) {
                   setDevice(device);
-                }else{
-                  rejectConnectionPromise("E100","No Device found");
+                } else {
+                  rejectConnectionPromise("E100", "No Device found");
                 }
               }
-            }else{
+            } else {
               rejectConnectionPromise("E101", "Device is null");
             }
-          }
-          else {
-            Log.d(TAG, "permission denied for device " + device);
+          } else {
+            Log.d(TAG, "Permission denied for device " + device);
+
+            // Retry permission request
+            UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
+             PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
+             context, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
+
+            if (device != null) {
+              manager.requestPermission(device, usbPermissionIntent);
+            }
+
             rejectConnectionPromise("E102", "Permission denied for device");
           }
         }
@@ -222,8 +243,8 @@ public class ReaderModule extends ReactContextBaseJavaModule {
     int len = hex.length();
     byte[] data = new byte[len / 2];
     for (int i = 0; i < len; i += 2) {
-      data[i / 2] = (byte)((Character.digit(hex.charAt(i), 16) << 4)
-        + Character.digit(hex.charAt(i + 1), 16));
+      data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
+          + Character.digit(hex.charAt(i + 1), 16));
     }
     return data;
   }

@@ -50,5 +50,6 @@ repositories {
 
 dependencies {
     implementation("com.facebook.react:react-android:0.72.0") // Gantilah dengan versi React Native yang sesuai
-    implementation files('libs/acssmc-1.1.5.jar')  // Pastikan path file ini benar
+    // implementation files('libs/acssmc-1.1.5.jar')  // Pastikan path file ini benar
+    implementation files('libs/acssmc-1.1.7.aar')  // Pastikan path file ini benar
 }
