@@ -1,6 +1,6 @@
 {
   "name": "react-native-acs",
-  "version": "0.1.4",
+  "version": "0.1.5-beta.0",
   "description": "React native library to comunicate with ACS nfc reader",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
