@@ -215,15 +215,8 @@ public class ReaderModule extends ReactContextBaseJavaModule {
 
             // Retry permission request
             UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
-            // PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
-            // context, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
-
             PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
-                context,
-                0,
-                new Intent(ACTION_USB_PERMISSION),
-                PendingIntent.FLAG_IMMUTABLE // Use the same flag as in Init
-            );
+                context, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
 
             if (device != null) {
               manager.requestPermission(device, usbPermissionIntent);
