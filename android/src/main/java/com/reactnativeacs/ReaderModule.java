@@ -7,28 +7,24 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.acs.smartcard.ReaderException;
+import com.acs.smartcard.Reader;
+import com.acs.smartcard.Reader.OnStateChangeListener;
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.Arguments;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
-import com.acs.smartcard.Reader;
-import com.acs.smartcard.Reader.OnStateChangeListener;
-
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 @ReactModule(name = ReaderModule.NAME)
@@ -75,22 +71,21 @@ public class ReaderModule extends ReactContextBaseJavaModule {
       if (this.device == null) {
         this.rejectConnectionPromise("E100", "No Device found");
       } else {
-        // PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
-        // this.reactContext, 0, new Intent(ACTION_USB_PERMISSION),
-        // PendingIntent.FLAG_IMMUTABLE);
         PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
             this.reactContext,
             0,
             new Intent(ACTION_USB_PERMISSION),
-            PendingIntent.FLAG_IMMUTABLE // Change from FLAG_IMMUTABLE to FLAG_MUTABLE
-        );
+            PendingIntent.FLAG_IMMUTABLE);
 
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-        this.reactContext.registerReceiver(usbReceiver, filter);
 
-        // Log before requesting permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+          this.reactContext.registerReceiver(usbReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+          this.reactContext.registerReceiver(usbReceiver, filter);
+        }
+
         Log.d(TAG, "Requesting USB permission...");
-
         manager.requestPermission(this.device, usbPermissionIntent);
       }
     } catch (NullPointerException np) {
