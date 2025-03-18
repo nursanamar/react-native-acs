@@ -75,22 +75,21 @@ public class ReaderModule extends ReactContextBaseJavaModule {
       if (this.device == null) {
         this.rejectConnectionPromise("E100", "No Device found");
       } else {
-        // PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
-        // this.reactContext, 0, new Intent(ACTION_USB_PERMISSION),
-        // PendingIntent.FLAG_IMMUTABLE);
+        // Create an explicit Intent by setting the package
+        Intent usbIntent = new Intent(ACTION_USB_PERMISSION);
+        usbIntent.setPackage(reactContext.getPackageName());
+
         PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
             this.reactContext,
             0,
-            new Intent(ACTION_USB_PERMISSION),
-            PendingIntent.FLAG_MUTABLE // Change from FLAG_IMMUTABLE to FLAG_MUTABLE
+            usbIntent,
+            PendingIntent.FLAG_IMMUTABLE // Use FLAG_IMMUTABLE
         );
 
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         this.reactContext.registerReceiver(usbReceiver, filter);
 
-        // Log before requesting permission
         Log.d(TAG, "Requesting USB permission...");
-
         manager.requestPermission(this.device, usbPermissionIntent);
       }
     } catch (NullPointerException np) {
@@ -215,8 +214,15 @@ public class ReaderModule extends ReactContextBaseJavaModule {
 
             // Retry permission request
             UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
-             PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
-             context, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
+            // PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
+            // context, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
+
+            PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
+                context,
+                0,
+                new Intent(ACTION_USB_PERMISSION),
+                PendingIntent.FLAG_IMMUTABLE // Use the same flag as in Init
+            );
 
             if (device != null) {
               manager.requestPermission(device, usbPermissionIntent);
