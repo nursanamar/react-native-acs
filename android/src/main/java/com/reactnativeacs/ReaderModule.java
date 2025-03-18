@@ -75,21 +75,22 @@ public class ReaderModule extends ReactContextBaseJavaModule {
       if (this.device == null) {
         this.rejectConnectionPromise("E100", "No Device found");
       } else {
-        // Create an explicit Intent by setting the package
-        Intent usbIntent = new Intent(ACTION_USB_PERMISSION);
-        usbIntent.setPackage(reactContext.getPackageName());
-
+        // PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
+        // this.reactContext, 0, new Intent(ACTION_USB_PERMISSION),
+        // PendingIntent.FLAG_IMMUTABLE);
         PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
             this.reactContext,
             0,
-            usbIntent,
-            PendingIntent.FLAG_IMMUTABLE // Use FLAG_IMMUTABLE
+            new Intent(ACTION_USB_PERMISSION),
+            PendingIntent.FLAG_IMMUTABLE // Change from FLAG_IMMUTABLE to FLAG_MUTABLE
         );
 
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         this.reactContext.registerReceiver(usbReceiver, filter);
 
+        // Log before requesting permission
         Log.d(TAG, "Requesting USB permission...");
+
         manager.requestPermission(this.device, usbPermissionIntent);
       }
     } catch (NullPointerException np) {
