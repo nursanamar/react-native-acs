@@ -1,5 +1,6 @@
 package com.reactnativeacs;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,6 +13,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.PendingIntentCompat;
 
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.Reader.OnStateChangeListener;
@@ -71,18 +73,23 @@ public class ReaderModule extends ReactContextBaseJavaModule {
       if (this.device == null) {
         this.rejectConnectionPromise("E100", "No Device found");
       } else {
-        PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
-            this.reactContext,
-            0,
-            new Intent(ACTION_USB_PERMISSION),
-            PendingIntent.FLAG_IMMUTABLE);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= 34) {
+          flags |= PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT;
+        }
+        PendingIntent usbPermissionIntent = PendingIntentCompat.getBroadcast(this.reactContext, 0,
+          new Intent(ACTION_USB_PERMISSION), flags, true);
+//        PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
+//          this.reactContext, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
 
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-          this.reactContext.registerReceiver(usbReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+          this.reactContext.registerReceiver(usbReceiver, filter, Context.RECEIVER_EXPORTED);
         } else {
-          this.reactContext.registerReceiver(usbReceiver, filter);
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            this.reactContext.registerReceiver(usbReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+          }
         }
 
         Log.d(TAG, "Requesting USB permission...");
