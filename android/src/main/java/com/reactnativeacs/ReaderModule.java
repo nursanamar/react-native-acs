@@ -13,6 +13,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.PendingIntentCompat;
 
 import com.acs.smartcard.Reader;
@@ -55,6 +56,7 @@ public class ReaderModule extends ReactContextBaseJavaModule {
     return NAME;
   }
 
+  @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
   @ReactMethod
   public void Init(Promise promise) {
     UsbManager manager = (UsbManager) this.reactContext.getSystemService(Context.USB_SERVICE);
@@ -87,9 +89,7 @@ public class ReaderModule extends ReactContextBaseJavaModule {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
           this.reactContext.registerReceiver(usbReceiver, filter, Context.RECEIVER_EXPORTED);
         } else {
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            this.reactContext.registerReceiver(usbReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-          }
+          this.reactContext.registerReceiver(usbReceiver, filter);
         }
 
         Log.d(TAG, "Requesting USB permission...");

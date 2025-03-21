@@ -8,9 +8,6 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        flatDir {
-            dirs "$rootDir/libs"
-        }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.1.2' // Gunakan versi terbaru
@@ -24,7 +21,7 @@ android {
     compileSdk 34 // Pastikan menggunakan versi yang lebih baru
 
     defaultConfig {
-        minSdk 21
+        minSdk 26
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -42,6 +39,16 @@ android {
     }
 }
 
+// Add this configuration to resolve Kotlin version conflicts
+configurations.all {
+    resolutionStrategy {
+        force "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22"
+        force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22"
+        force "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22"
+    }
+}
+
 repositories {
     mavenLocal()
     maven {
@@ -49,16 +56,11 @@ repositories {
     }
     google()
     mavenCentral()
-    flatDir {
-        dirs "$rootDir/libs"
-    }
 }
 
 dependencies {
     implementation 'androidx.core:core:1.12.0'
     implementation("com.facebook.react:react-android:0.72.0") // Gantilah dengan versi React Native yang sesuai
     // implementation files('libs/acssmc-1.1.5.jar')  // Pastikan path file ini benar
-//    implementation files('libs/acssmc-1.1.7.aar')  // Pastikan path file ini benar
-    implementation(name: 'acssmc-1.1.7', ext: 'aar')
+    implementation files('libs/acssmc-1.1.7.jar')  // Pastikan path file ini benar
 }
-
