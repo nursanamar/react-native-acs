@@ -1,31 +1,30 @@
 buildscript {
-    if (project == rootProject) {
-        repositories {
-            google()
-            mavenCentral()
-            jcenter()
-        }
-
-        dependencies {
-            classpath 'com.android.tools.build:gradle:3.5.3'
-        }
+    ext {
+        buildToolsVersion = "33.0.1"
+        minSdkVersion = 21
+        compileSdkVersion = 33
+        targetSdkVersion = 33
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.2' // Gunakan versi terbaru
     }
 }
 
 apply plugin: 'com.android.library'
 
-def safeExtGet(prop, fallback) {
-    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
-}
-
 android {
-    compileSdkVersion safeExtGet('Acs_compileSdkVersion', 29)
+    namespace "com.reactnativeacs" // Ganti sesuai dengan nama package
+    compileSdk 34 // Pastikan menggunakan versi yang lebih baru
+
     defaultConfig {
-        minSdkVersion safeExtGet('Acs_minSdkVersion', 16)
-        targetSdkVersion safeExtGet('Acs_targetSdkVersion', 29)
+        minSdk 26
+        targetSdk 34
         versionCode 1
         versionName "1.0"
-
     }
 
     buildTypes {
@@ -33,28 +32,35 @@ android {
             minifyEnabled false
         }
     }
-    lintOptions {
-        disable 'GradleCompatible'
-    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
+// Add this configuration to resolve Kotlin version conflicts
+configurations.all {
+    resolutionStrategy {
+        force "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22"
+        force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22"
+        force "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22"
+    }
+}
+
 repositories {
     mavenLocal()
     maven {
-        // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
         url("$rootDir/../node_modules/react-native/android")
     }
     google()
     mavenCentral()
-    jcenter()
 }
 
 dependencies {
-    //noinspection GradleDynamicVersion
-    implementation "com.facebook.react:react-native:+"
-  implementation files('libs\\acssmc-1.1.5.jar')  // From node_modules
+    implementation 'androidx.core:core:1.12.0'
+    implementation("com.facebook.react:react-android:0.72.0") // Gantilah dengan versi React Native yang sesuai
+    // implementation files('libs/acssmc-1.1.5.jar')  // Pastikan path file ini benar
+    implementation files('libs/acssmc-1.1.7.jar')  // Pastikan path file ini benar
 }
