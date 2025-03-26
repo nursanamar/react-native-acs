@@ -146,5 +146,8 @@
   },
   "dependencies": {
     "events": "^3.3.0"
+  },
+  "volta": {
+    "node": "22.14.0"
   }
 }
