@@ -2,9 +2,9 @@
 
 buildscript {
     ext {
-        compileSdkVersion = 33
-        minSdkVersion = 21
-        targetSdkVersion = 33
+        compileSdkVersion = 34
+        minSdkVersion = 26
+        targetSdkVersion = 34
     }
     repositories {
         google()
@@ -15,6 +15,17 @@ buildscript {
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
+}
+
+allprojects {
+  configurations.all {
+    resolutionStrategy {
+      force "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+      force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22"
+      force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22"
+      force "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22"
+    }
+  }
 }
 
 allprojects {
